@@ -2,15 +2,13 @@ import { initializeApp } from 'firebase/app';
 import { getAuth } from 'firebase/auth';
 import { getFirestore } from 'firebase/firestore';
 
-// ВАЖНО: замените значения ниже на конфигурацию вашего проекта Firebase.
-// Найти их можно в Firebase Console -> Настройки проекта -> Общие -> Ваши приложения -> SDK setup and configuration.
 const firebaseConfig = {
-  apiKey: 'ВАШ_API_KEY',
-  authDomain: 'ВАШ_PROJECT_ID.firebaseapp.com',
-  projectId: 'ВАШ_PROJECT_ID',
-  storageBucket: 'ВАШ_PROJECT_ID.appspot.com',
-  messagingSenderId: 'ВАШ_SENDER_ID',
-  appId: 'ВАШ_APP_ID'
+  apiKey: 'AIzaSyD2fmXw6vyJnwEnEkbXXGC1XuOxJsQ95dU',
+  authDomain: 'zaselenie-su-10-22e29.firebaseapp.com',
+  projectId: 'zaselenie-su-10-22e29',
+  storageBucket: 'zaselenie-su-10-22e29.firebasestorage.app',
+  messagingSenderId: '712952306261',
+  appId: '1:712952306261:web:088aaac9c39228d9dfd2dc'
 };
 
 const app = initializeApp(firebaseConfig);
