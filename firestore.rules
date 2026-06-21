@@ -1,0 +1,79 @@
+rules_version = '2';
+
+// Правила безопасности Firestore для системы учёта заселения.
+// Логика:
+// - Любой авторизованный пользователь может читать свой профиль и видеть, одобрен ли его доступ.
+// - Читать/писать данные проектов (структуру, помещения) может только пользователь
+//   с accessStatus == 'approved'.
+// - Изменять структуру (корпуса, этажи, удаление помещений) может только role == 'admin'.
+// - Обычный пользователь может менять статус и комментарий помещения, но не создавать/удалять
+//   корпуса и помещения.
+// - Управлять пользователями (роли, одобрение доступа) может только администратор.
+
+function isSignedIn() {
+  return request.auth != null;
+}
+
+function userDoc() {
+  return get(/databases/$(database)/documents/users/$(request.auth.uid));
+}
+
+function isApproved() {
+  return isSignedIn() &&
+    userDoc().data.accessStatus == 'approved';
+}
+
+function isAdmin() {
+  return isSignedIn() &&
+    userDoc().data.accessStatus == 'approved' &&
+    userDoc().data.role == 'admin';
+}
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // Пользователи: пользователь может создать только свой собственный профиль при регистрации,
+    // читать может только себя или, если он admin, любого. Изменять роль/статус доступа может
+    // только admin (либо это служебное поле, недоступное обычному пользователю).
+    match /users/{uid} {
+      allow create: if isSignedIn() && request.auth.uid == uid;
+      allow read: if isSignedIn() && (request.auth.uid == uid || isAdmin());
+      allow update: if isSignedIn() && (
+        // Сам пользователь не может менять себе role/accessStatus
+        (request.auth.uid == uid &&
+          request.resource.data.role == resource.data.role &&
+          request.resource.data.accessStatus == resource.data.accessStatus) ||
+        isAdmin()
+      );
+      allow delete: if isAdmin();
+    }
+
+    // Служебный документ для определения "первого" пользователя (становится админом)
+    match /meta/{docId} {
+      allow read: if isSignedIn();
+      allow write: if isSignedIn();
+    }
+
+    match /projects/{projectId} {
+      allow read: if isApproved();
+      allow write: if isAdmin();
+
+      match /corpuses/{corpusId} {
+        allow read: if isApproved();
+        allow create, update, delete: if isAdmin();
+      }
+
+      match /units/{unitId} {
+        allow read: if isApproved();
+        // Создавать/удалять помещения и менять corpusId/floor/num/type — только админ.
+        allow create, delete: if isAdmin();
+        allow update: if isAdmin() || (
+          isApproved() &&
+          // Обычный пользователь может менять только status и comment
+          request.resource.data.diff(resource.data).affectedKeys()
+            .hasOnly(['status', 'comment', 'updatedAt'])
+        );
+      }
+    }
+  }
+}
