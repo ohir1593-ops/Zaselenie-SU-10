@@ -54,7 +54,7 @@ export function AuthProvider({ children }) {
     profile,
     loading: firebaseUser === undefined || (!!firebaseUser && profileLoading),
     isAdmin: profile?.role === 'admin',
-    isApproved: profile?.accessStatus === 'approved',
+    isApproved: true,
     login,
     register,
     logout
