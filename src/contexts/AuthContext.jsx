@@ -11,7 +11,7 @@ import { createUserProfile, subscribeUserProfile } from '../lib/usersApi';
 const AuthContext = createContext(null);
 
 export function AuthProvider({ children }) {
-  const [firebaseUser, setFirebaseUser] = useState(undefined); // undefined = ещё загружается
+  const [firebaseUser, setFirebaseUser] = useState(undefined);
   const [profile, setProfile] = useState(null);
   const [profileLoading, setProfileLoading] = useState(true);
 
@@ -54,7 +54,7 @@ export function AuthProvider({ children }) {
     profile,
     loading: firebaseUser === undefined || (!!firebaseUser && profileLoading),
     isAdmin: profile?.role === 'admin',
-    isApproved: true,
+    isApproved: profile?.accessStatus === 'approved',
     login,
     register,
     logout
